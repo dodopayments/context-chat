@@ -1,0 +1,33 @@
+# Acme Documentation
+> Query: subscription trial and refund
+> Results: 4
+
+----------------------------------------
+## Subscriptions
+Source: https://docs.example.com/features/subscription
+
+## Subscription Trials
+
+Trials let customers access subscriptions without immediate payment. The first charge occurs automatically when the trial ends.
+
+----------------------------------------
+## Create Subscription Handler - Python Example
+Source: https://docs.example.com/api-reference/subscriptions/post-subscriptions
+API: POST /subscriptions
+Language: Python
+
+Python code example for `POST /subscriptions`.
+
+----------------------------------------
+## Refunds
+Source: https://docs.example.com/features/transactions/refunds
+
+## Initiate Refund
+
+You can initiate full or partial refunds from the Payment Details Page.
+
+----------------------------------------
+## Subscriptions
+Source: https://docs.example.com/features/subscription
+
+Duplicate block with the same Source URL to exercise dedupe.

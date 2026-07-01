@@ -1,0 +1,72 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "context-chat",
+  // No account_id is pinned — set CLOUDFLARE_ACCOUNT_ID in your environment/CI at deploy time.
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // Deploys to <name>.<subdomain>.workers.dev by default. To use a custom domain
+  // (recommended so an edge WAF rate-limit rule can sit in front of /chat), add e.g.:
+  //   "routes": [{ "pattern": "chat.yourdomain.com", "custom_domain": true }]
+
+  // Non-sensitive config only. Secrets go via `wrangler secret put` (see .dev.vars.example).
+  "vars": {
+    "MODEL": "gpt-4o-mini",
+
+    // ── Retrieval ──────────────────────────────────────────────────────────
+    // Adapter: "contextmcp" (default) | "http-json" | "http-markdown".
+    "RETRIEVAL_PROVIDER": "contextmcp",
+    // Your ContextMCP (or compatible) search endpoint. See https://contextmcp.ai.
+    "RETRIEVAL_URL": "https://your-contextmcp.workers.dev/search",
+    "RETRIEVAL_LIMIT": "12",
+
+    // ── Assistant identity (shapes the system prompt) ──────────────────────
+    "ASSISTANT_NAME": "AI Assistant",
+    "COMPANY_NAME": "Your Company",
+    "COMPANY_DESC": "",
+    "SUPPORT_CONTACT": "support@example.com",
+
+    // ── Access / abuse controls ────────────────────────────────────────────
+    // Comma-separated allowlist of host-page origins that may call /chat.
+    "ALLOWED_ORIGINS": "https://your-docs.example.com",
+    // Public Turnstile sitekey (consumed by the widget). The default is Cloudflare's
+    // "always-passes" TEST key — replace it with your real sitekey for production.
+    // To disable bot checks entirely, set "TURNSTILE_ENABLED": "false" and omit the
+    // widget's turnstileSitekey (insecure for public endpoints — see SECURITY.md).
+    "TURNSTILE_SITEKEY": "1x00000000000000000000AA",
+
+    "MAX_OUTPUT_TOKENS": "1100",
+    // Global daily caps (the Durable Object enforces these across all users/colos).
+    "GLOBAL_MAX_REQUESTS_PER_DAY": "6000",
+    "GLOBAL_MAX_TOKENS_PER_DAY": "10000000"
+
+    // Optional AI Gateway routing — set all three (and a CF_AIG_TOKEN secret) to route
+    // OpenAI through Cloudflare AI Gateway for caching / spend limits / logging:
+    //   "CF_ACCOUNT_ID": "<account-id>", "CF_GATEWAY_ID": "<gateway-name>"
+  },
+
+  // Static Assets — serves the prebuilt widget bundle from ./widget/dist.
+  // The Worker handles /chat first; everything else falls through to assets.
+  "assets": {
+    "directory": "./widget/dist",
+    "binding": "ASSETS",
+    "run_worker_first": ["/chat"]
+  },
+
+  // Per-IP rate limit binding. period must be 10 or 60. 20/min.
+  "ratelimits": [
+    {
+      "name": "IP_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ],
+
+  // Global request/token-per-day counter.
+  "durable_objects": {
+    "bindings": [{ "name": "GLOBAL_BUDGET", "class_name": "GlobalBudgetDO" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GlobalBudgetDO"] }]
+}

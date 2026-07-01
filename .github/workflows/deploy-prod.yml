@@ -1,0 +1,49 @@
+name: Deploy (production)
+
+# Optional production deploy. The full Worker config is supplied via the
+# WRANGLER_PROD_CONFIG secret (so no deployment-specific values live in the repo)
+# and Cloudflare auth via CLOUDFLARE_API_TOKEN. Runs only on manual dispatch or a
+# v* tag, gated on the `production` environment -- add required reviewers there.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Worker
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build widget bundle
+        run: npm run build:widget
+
+      - name: Write deployment config from secret
+        env:
+          WRANGLER_PROD_CONFIG: ${{ secrets.WRANGLER_PROD_CONFIG }}
+        run: |
+          if [ -z "$WRANGLER_PROD_CONFIG" ]; then
+            echo "::error::WRANGLER_PROD_CONFIG secret is not set; nothing to deploy."
+            exit 1
+          fi
+          printf '%s' "$WRANGLER_PROD_CONFIG" > wrangler.prod.jsonc
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy -c wrangler.prod.jsonc

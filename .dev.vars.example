@@ -1,0 +1,20 @@
+# Copy to `.dev.vars` for local dev (gitignored). In production set these with `wrangler secret put <NAME>`
+# (or run `npm run setup:secrets`). NEVER commit real values — injected into `env` at runtime, never bundled.
+
+# OpenAI API key (BYOK). Used directly to authenticate OpenAI requests.
+# (If you route through Cloudflare AI Gateway instead, the key can live in the gateway
+# and you set CF_AIG_TOKEN below + CF_ACCOUNT_ID/CF_GATEWAY_ID vars in wrangler.jsonc.)
+OPENAI_API_KEY=sk-your-openai-key
+
+# Cloudflare Turnstile secret key (server-side siteverify). For local dev use the Cloudflare test secret:
+#   always-passes: 1x0000000000000000000000000000000AA
+#   always-fails:  2x0000000000000000000000000000000AA
+# Not needed if you run with TURNSTILE_ENABLED=false.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+
+# OPTIONAL — Cloudflare AI Gateway auth token. Only set this if you enabled AI Gateway
+# routing (CF_ACCOUNT_ID + CF_GATEWAY_ID vars). Gateway → Settings → Create authentication token.
+# CF_AIG_TOKEN=your_ai_gateway_auth_token
+
+# Local-dev convenience: disable Turnstile so you can test without a real challenge.
+# TURNSTILE_ENABLED=false

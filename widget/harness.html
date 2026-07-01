@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContextChat — widget harness</title>
+    <!--
+      Local QA harness for widget/dist/widget.js.
+
+      It deliberately injects a hostile global rule (`button { background: red }`)
+      and an outside <button> to PROVE Shadow-DOM style isolation in both
+      directions, and it stubs Cloudflare Turnstile + window.fetch so the streamed
+      answer + citation chip can be exercised WITHOUT a live endpoint or a real
+      Turnstile challenge.  See the two stub scripts below for exactly what is faked.
+    -->
+    <style>
+      /* Hostile host-page CSS: must NOT cross the shadow boundary into the widget,
+         and the widget's own button styles must NOT leak out to #outside. */
+      button {
+        background: red !important;
+      }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 40px;
+        color: #222;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ContextChat harness</h1>
+    <p>This page hosts the built widget for Playwright QA.</p>
+    <button id="outside">Outside</button>
+
+    <!-- 1) Host-page config contract (window.ContextChat), set BEFORE widget.js. -->
+    <script>
+      window.ContextChat = {
+        chatEndpoint: "https://chat.test.local/chat",
+        // Cloudflare Turnstile "always-passes" TEST sitekey (mock below short-circuits it).
+        turnstileSitekey: "1x00000000000000000000AA",
+        assistantName: "Acme Assistant",
+        tagline: "Answers from the Acme docs",
+        starterQuestions: [
+          "How do I create a subscription?",
+          "How do webhooks work?",
+        ],
+        hotkey: "mod+i",
+        // Runtime overrides: light theme, a distinct dark palette, and independent body + display fonts.
+        theme: { "--primary": "#7c3aed", "--ring": "#7c3aed" },
+        themeDark: { "--primary": "#c084fc", "--ring": "#c084fc" },
+        fontFamily: "Georgia, serif",
+        fontFamilyDisplay: "'Courier New', monospace",
+      };
+    </script>
+
+    <!-- 2) Turnstile STUB: no network, no real challenge. render() stores the
+         callback; execute() invokes it with a dummy single-use token, mirroring the
+         real invisible/execute flow the widget's TurnstileController drives. The
+         widget uses window.turnstile directly when it already exists (it does here),
+         so api.js is never loaded. -->
+    <script>
+      (function () {
+        var widgets = {};
+        var seq = 0;
+        window.turnstile = {
+          render: function (container, options) {
+            var id = "w" + ++seq;
+            widgets[id] = options;
+            return id;
+          },
+          execute: function (id) {
+            var o = widgets[id];
+            if (o && typeof o.callback === "function") {
+              setTimeout(function () {
+                o.callback("DUMMY.TURNSTILE.TOKEN." + Date.now());
+              }, 0);
+            }
+          },
+          reset: function () {},
+          remove: function (id) {
+            delete widgets[id];
+          },
+        };
+      })();
+    </script>
+
+    <!-- 3) fetch STUB: for POST https://chat.test.local/chat, returns a real
+         text/event-stream Response whose body is an AI SDK UI message stream. Frames
+         (captured verbatim from `ai`'s createUIMessageStreamResponse) are enqueued
+         ~120ms apart so token streaming is observable, and a `source-url` frame
+         drives the citation chip. All other URLs hit the real fetch. -->
+    <script>
+      (function () {
+        var realFetch = window.fetch.bind(window);
+        function frame(obj) {
+          return "data: " + JSON.stringify(obj) + "\n\n";
+        }
+        window.fetch = function (input, init) {
+          var url = typeof input === "string" ? input : (input && input.url) || "";
+          if (url.indexOf("chat.test.local/chat") === -1) {
+            return realFetch(input, init);
+          }
+          var enc = new TextEncoder();
+          var frames = [
+            frame({
+              type: "source-url",
+              sourceId: "cite-1",
+              url: "https://docs.example.com/features/subscription",
+              title: "Subscriptions",
+            }),
+            frame({ type: "text-start", id: "0" }),
+            frame({ type: "text-delta", id: "0", delta: "To create a subscription, " }),
+            frame({ type: "text-delta", id: "0", delta: "call the **Create Subscription** API " }),
+            frame({ type: "text-delta", id: "0", delta: "with a `product_id` and a `customer`." }),
+            frame({ type: "text-end", id: "0" }),
+            "data: [DONE]\n\n",
+          ];
+          var i = 0;
+          var stream = new ReadableStream({
+            pull: function (controller) {
+              if (i >= frames.length) {
+                controller.close();
+                return;
+              }
+              return new Promise(function (resolve) {
+                setTimeout(function () {
+                  controller.enqueue(enc.encode(frames[i++]));
+                  resolve();
+                }, 120);
+              });
+            },
+          });
+          return Promise.resolve(
+            new Response(stream, {
+              status: 200,
+              headers: {
+                "Content-Type": "text/event-stream",
+                "x-vercel-ai-ui-message-stream": "v1",
+                "cache-control": "no-cache",
+              },
+            }),
+          );
+        };
+      })();
+    </script>
+
+    <!-- 4) The built widget. -->
+    <script src="./dist/widget.js"></script>
+  </body>
+</html>

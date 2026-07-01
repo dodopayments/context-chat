@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ContextChat — embed example</title>
+    <style>
+      body {
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 48px 24px;
+        line-height: 1.6;
+        color: #18181b;
+      }
+      code {
+        background: #f4f4f5;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Your documentation site</h1>
+    <p>
+      This is a sample host page. The ContextChat "Ask AI" launcher appears in the
+      bottom-right corner — click it (or press <code>Cmd/Ctrl-I</code>) to open the assistant.
+    </p>
+    <p>
+      To use this on your own site, replace <code>chatEndpoint</code> (and the widget
+      <code>src</code>) with your deployed Worker's URL, and set
+      <code>turnstileSitekey</code> to your public Turnstile sitekey.
+    </p>
+
+    <!-- 1) Host-page config, set BEFORE widget.js loads. -->
+    <script>
+      window.ContextChat = {
+        chatEndpoint: "https://your-worker.workers.dev/chat",
+        turnstileSitekey: "0xYOUR_TURNSTILE_SITEKEY",
+        assistantName: "Acme Assistant",
+        tagline: "Answers from the Acme docs",
+        welcomeHeading: "Ask Acme Assistant",
+        welcomeSubtext: "Get answers from the documentation, with sources.",
+        launcherLabel: "Ask AI",
+        starterQuestions: [
+          "How do I authenticate?",
+          "How do webhooks work?",
+        ],
+        hotkey: "mod+i",
+        theme: { "--primary": "#4f46e5", "--radius": "0.75rem" },
+      };
+    </script>
+
+    <!-- 2) The widget bundle, served by your Worker's static assets. -->
+    <script src="https://your-worker.workers.dev/widget.js" defer></script>
+
+    <!--
+      Alternatively, use the one-tag loader (sets window.ContextChat from data-* attrs and
+      injects widget.js for you):
+
+      <script
+        src="https://your-worker.workers.dev/loader.js"
+        data-chat-endpoint="https://your-worker.workers.dev/chat"
+        data-turnstile-sitekey="0xYOUR_TURNSTILE_SITEKEY"
+        data-assistant-name="Acme Assistant"
+        data-starter-questions='["How do I authenticate?","How do webhooks work?"]'
+        data-theme='{"--primary":"#4f46e5"}'
+        defer></script>
+    -->
+  </body>
+</html>

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+widget/dist/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+# Environment-specific deploy configs (real infra values) — never commit.
+wrangler.prod.jsonc
+wrangler.*.jsonc
+!wrangler.jsonc
+*.log
+.DS_Store
+.idea/
+.vscode/
+coverage/
+# Local agent/planning artifacts — never commit.
+.omo/
+.playwright-mcp/

@@ -1,0 +1,62 @@
+{
+  "name": "context-chat",
+  "version": "0.1.0",
+  "description": "Embeddable, self-hosted AI chat widget for your docs. A Cloudflare Worker that retrieves from ContextMCP (or any search endpoint) and streams OpenAI answers with citations, behind layered abuse controls.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/dodopayments/context-chat",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dodopayments/context-chat.git"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "chatbot",
+    "rag",
+    "documentation",
+    "embeddable",
+    "widget",
+    "cloudflare-workers",
+    "openai",
+    "contextmcp",
+    "ask-ai"
+  ],
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "setup:secrets": "bash scripts/set-secrets.sh",
+    "build:widget": "node widget/build.mjs",
+    "watch:widget": "node widget/build.mjs --watch"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.0",
+    "@ai-sdk/react": "^2.0.0",
+    "ai": "^5.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "radix-ui": "^1.4.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "use-stick-to-bottom": "^1.1.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "@types/node": "^22.20.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.28.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
