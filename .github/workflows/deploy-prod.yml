@@ -1,14 +1,14 @@
 name: Deploy (production)
 
-# Optional production deploy. The full Worker config is supplied via the
-# WRANGLER_PROD_CONFIG secret (so no deployment-specific values live in the repo)
-# and Cloudflare auth via CLOUDFLARE_API_TOKEN. Runs only on manual dispatch or a
-# v* tag, gated on the `production` environment -- add required reviewers there.
+# Production deploy. The full Worker config is supplied via the WRANGLER_PROD_CONFIG
+# secret (so no deployment-specific values live in the repo) and Cloudflare auth via
+# CLOUDFLARE_API_TOKEN. Runs on every push to main (and manual dispatch), gated on
+# the `production` environment -- required reviewers there approve each deploy.
 
 on:
   workflow_dispatch:
   push:
-    tags: ["v*"]
+    branches: [main]
 
 concurrency:
   group: deploy-production

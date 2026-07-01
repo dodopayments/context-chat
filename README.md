@@ -78,8 +78,9 @@ npm run setup:secrets              # OPENAI_API_KEY (+ TURNSTILE_SECRET if enabl
 ### Automated deploys (optional)
 
 [`.github/workflows/deploy-prod.yml`](.github/workflows/deploy-prod.yml) deploys the Worker
-from CI without committing any deployment-specific values. It runs only on manual dispatch or a
-`v*` tag and is gated on a `production` GitHub Environment. To use it:
+from CI without committing any deployment-specific values. It runs on every push to `main`
+(and manual dispatch) and is gated on a `production` GitHub Environment — add required
+reviewers there to approve each deploy. To use it:
 
 1. Create a `production` environment (repo → Settings → Environments) and add required reviewers.
 2. Add two repository secrets:
